@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 
-const Map = ({ restoCord, restoAddress, restoName, restoImg, restoSite, cityCord }) => {
+const Map = ({ restoCord, restoAddress, restoName, restoImg, restoSite, cityCord, onMapMarkerPress }) => {
   return (
     <View style={{ flex: 1 }}>
       <MapView
@@ -15,7 +15,11 @@ const Map = ({ restoCord, restoAddress, restoName, restoImg, restoSite, cityCord
         }}
       >
         {restoCord.map((coord, index) => (
-          <Marker coordinate={{ latitude: coord.lat, longitude: coord.lng }} key={index}>
+          <Marker
+            coordinate={{ latitude: coord.lat, longitude: coord.lng }}
+            key={index}
+            onPress={() => onMapMarkerPress(restoCord[index])}
+          >
             <Callout>
               <View>
                 <Text>{restoName[index]}</Text>

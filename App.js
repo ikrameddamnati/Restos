@@ -3,8 +3,6 @@ import { Animated, Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View
 import profile from './assets/gericht.png';
 import home from './assets/home.png';
 import search from './assets/search.png';
-import notifications from './assets/bell.png';
-import settings from './assets/settings.png';
 import menu from './assets/menu.png';
 import close from './assets/close.png';
 import AboutUs from './AboutUs'; // Import the AboutUs component
@@ -32,11 +30,7 @@ export default function App() {
           <Footer />
         </React.Fragment>
       );
-    } else if (currentTab === "Notifications") {
-      return <Text>Notifications Tab Content</Text>;
-    } else if (currentTab === "Settings") {
-      return <Text>Settings Tab Content</Text>;
-    } else {
+    }  else {
       return null;
     }
   };
@@ -49,8 +43,7 @@ export default function App() {
         <View style={{ flexGrow: 1, marginTop: 50 }}>
           {TabButton(currentTab, setCurrentTab, "Home", home)}
           {TabButton(currentTab, setCurrentTab, "Search", search)}
-          {TabButton(currentTab, setCurrentTab, "Notifications", notifications)}
-          {TabButton(currentTab, setCurrentTab, "Settings", settings)}
+          
         </View>
       </View>
 

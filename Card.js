@@ -1,21 +1,21 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Linking } from 'react-native';
 
-const Card = ({ image, name, adresse, description, site }) => {
+const Card = ({ name, adresse, description, site, image, onSelect, onMapLink }) => {
   return (
-    <TouchableOpacity style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={onSelect}>
       <Image source={{ uri: image }} style={styles.image} />
       <View style={styles.cardBody}>
         <Text style={styles.name}>{name}</Text>
         <Text style={styles.description}>{description}</Text>
         <Text style={styles.adresse}>Adresse: {adresse}</Text>
-        <TouchableOpacity style={styles.link} onPress={() => console.log('Go somewhere')}>
-          <Text style={styles.linkText}>Go somewhere</Text>
+        <TouchableOpacity style={styles.link} onPress={onMapLink}>
+          <Text style={styles.linkText}>Voir sur la carte</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
-}
+};
 
 const styles = StyleSheet.create({
   card: {

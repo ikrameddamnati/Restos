@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import axios from 'axios';
+import { Picker } from '@react-native-picker/picker';
 import Card from './Card';
 import Map from './Map';
-import { Picker } from '@react-native-picker/picker';
 
 const Header = () => {
   const [zones, setZones] = useState([]);
@@ -12,23 +12,21 @@ const Header = () => {
   const [cityId, setCityId] = useState('');
   const [zoneId, setZoneId] = useState('');
   const [specialityId, setSpecialityId] = useState('');
-  const [restoCord, setRestoCord] = useState([]);
-  const [restoName, setRestoName] = useState([]);
-  const [restoAddress, setRestoAddress] = useState([]);
-  const [restoImg, setImg] = useState([]);
-  const [restoSite, setSite] = useState([]);
-  const [cityCord, setCords] = useState([]);
+  const [restaurants, setRestaurants] = useState([]);
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null); // Nouvel état pour stocker les informations du restaurant sélectionné
 
-  const fetchZonesByCity = async (cityId) => {
+  const getZonesByCity = async (cityId) => {
     try {
-      const response = await axios.get(`https://near-9hdh.vercel.app/api/zones?cityId=${cityId}`);
-      setZones(response.data);
+      const response = await axios.get('https://near-9hdh.vercel.app/api/zones');
+      const zones = response.data.filter((zone) => zone.city === cityId);
+      setZones(zones);
+      setZoneId('');
     } catch (error) {
       console.error(error);
     }
   };
 
-  const fetchSpecialities = async () => {
+  const getSpecialities = async () => {
     try {
       const response = await axios.get('https://near-9hdh.vercel.app/api/specialities');
       setSpecialities(response.data);
@@ -48,16 +46,14 @@ const Header = () => {
 
   const handleCountry = (value) => {
     setCityId(value);
-    const selectedCity = cities.find((city) => city._id === value);
-    const coordinates = selectedCity ? selectedCity.cords : [33.74059917546109, -7.238578523576559];
-    setCords(coordinates);
-    setRestoCord([]);
-    fetchZonesByCity(value);
+    setZoneId('');
+    setRestaurants([]);
+    getZonesByCity(value);
   };
 
   useEffect(() => {
     fetchCities();
-    fetchSpecialities();
+    getSpecialities();
   }, []);
 
   const handleZoneChange = (value) => {
@@ -70,117 +66,93 @@ const Header = () => {
 
   const fetchRestaurantsByZoneAndSpeciality = async () => {
     try {
-      const response = await axios.get(
-        `https://near-9hdh.vercel.app/api/restos?zoneId=${zoneId}&specialityId=${specialityId}&cityId=${cityId}`
-      );
-      const coordinates = response.data.map((restaurant) => ({
-        lat: restaurant.cords[0],
-        lng: restaurant.cords[1],
-      }));
-      const names = response.data.map((restaurant) => restaurant.name);
-      const addresses = response.data.map((restaurant) => restaurant.adresse);
-      const img = response.data.map((restaurant) => restaurant.image);
-      const site = response.data.map((restaurant) => restaurant.site);
-      setRestoCord(coordinates);
-      setImg(img);
-      setRestoName(names);
-      setRestoAddress(addresses);
-      setSite(site);
+      const response = await axios.get('https://near-9hdh.vercel.app/api/restos');
+      const filteredRestaurants = response.data.filter((restaurant) => {
+        return (
+          restaurant.zone === zoneId &&
+          restaurant.speciality === specialityId
+        );
+      });
+      setRestaurants(filteredRestaurants);
     } catch (error) {
       console.error(error);
     }
   };
 
   useEffect(() => {
-    if (zoneId && specialityId && cityId) {
+    if (zoneId && specialityId) {
       fetchRestaurantsByZoneAndSpeciality();
     }
-  }, [zoneId, specialityId, cityId]);
+  }, [zoneId, specialityId]);
 
-  const handleGoSomewhere = (index) => {
-    // Handle the action when "Go somewhere" is clicked
-    // You can implement the logic to display the location in the map here
-    const selectedCoord = restoCord[index];
-    console.log('Go somewhere', selectedCoord);
+  const handleRestaurantSelect = (restaurant) => {
+    setSelectedRestaurant(restaurant);
   };
 
   return (
     <View style={styles.container}>
-      <ScrollView>
-        <View style={styles.wrapperInfo}>
-          <View style={styles.row}>
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Country</Text>
-              <Picker
-                selectedValue={cityId}
-                onValueChange={(value) => handleCountry(value)}
-              >
-                <Picker.Item label="-- Select city --" value="" />
-                {cities.map((city) => (
-                  <Picker.Item key={city._id} label={city.name} value={city._id} />
-                ))}
-              </Picker>
-            </View>
-            {cityId && (
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Zone</Text>
-                <Picker
-                  selectedValue={zoneId}
-                  onValueChange={(value) => handleZoneChange(value)}
-                >
-                  <Picker.Item label="-- Select zone --" value="" />
-                  {zones.map((zone) => (
-                    <Picker.Item key={zone._id} label={zone.name} value={zone._id} />
-                  ))}
-                </Picker>
-              </View>
-            )}
-            {cityId && (
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Speciality</Text>
-                <Picker
-                  selectedValue={specialityId}
-                  onValueChange={(value) => handleSpecialityChange(value)}
-                >
-                  <Picker.Item label="-- Select speciality --" value="" />
-                  {specialities.map((speciality) => (
-                    <Picker.Item key={speciality._id} label={speciality.name} value={speciality._id} />
-                  ))}
-                </Picker>
-              </View>
-            )}
+      <View style={styles.headerContainer}>
+        <Text style={styles.headerText}>City:</Text>
+        <Picker
+          selectedValue={cityId}
+          onValueChange={handleCountry}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select a city" value="" />
+          {cities.map((city) => (
+            <Picker.Item key={city._id} label={city.name} value={city._id} />
+          ))}
+        </Picker>
+        <Text style={styles.headerText}>Zone:</Text>
+        <Picker
+          selectedValue={zoneId}
+          onValueChange={handleZoneChange}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select a zone" value="" />
+          {zones.map((zone) => (
+            <Picker.Item key={zone._id} label={zone.name} value={zone._id} />
+          ))}
+        </Picker>
+        <Text style={styles.headerText}>Speciality:</Text>
+        <Picker
+          selectedValue={specialityId}
+          onValueChange={handleSpecialityChange}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select a speciality" value="" />
+          {specialities.map((speciality) => (
+            <Picker.Item key={speciality._id} label={speciality.name} value={speciality._id} />
+          ))}
+        </Picker>
+      </View>
+      {zoneId && specialityId && restaurants.length > 0 ? (
+        <ScrollView>
+          <View>
+            {restaurants.map((restaurant) => (
+              <Card
+                key={restaurant._id}
+                name={restaurant.name}
+                adresse={restaurant.adresse}
+                image={restaurant.image} // Assurez-vous que les données de l'API contiennent bien la propriété "image"
+                site={restaurant.site}
+                onSelect={() => handleRestaurantSelect(restaurant)} // Ajouter la gestion de la sélection du restaurant
+              />
+            ))}
           </View>
-        </View>
-        {zoneId && specialityId && restoCord.length > 0 && (
-          <View style={styles.cardsContainer}>
-            <ScrollView horizontal>
-              {restoCord.map((coord, index) => (
-                <Card
-                  key={index}
-                  image={restoImg[index]}
-                  name={restoName[index]}
-                  adresse={restoAddress[index]}
-                  description=""
-                  site={restoSite[index]}
-                  onGoSomewhere={() => handleGoSomewhere(index)}
-                />
-              ))}
-            </ScrollView>
-          </View>
-        )}
-        {restoCord && restoName && restoAddress && restoImg && restoSite && cityCord && (
-          <View style={styles.mapContainer}>
-            <Map
-              restoCord={restoCord}
-              restoName={restoName}
-              restoAddress={restoAddress}
-              restoImg={restoImg}
-              restoSite={restoSite}
-              cityCord={cityCord}
-            />
-          </View>
-        )}
-      </ScrollView>
+        </ScrollView>
+      ) : null}
+
+      {selectedRestaurant ? (
+        <Map
+          restoCord={selectedRestaurant.cord}
+          restoAddress={selectedRestaurant.adresse}
+          restoName={selectedRestaurant.name}
+          restoImg={selectedRestaurant.image}
+          restoSite={selectedRestaurant.site}
+          cityCord={cityCord} // Assurez-vous de fournir les coordonnées de la ville à partir de votre logique
+        />
+      ) : null}
     </View>
   );
 };
@@ -188,35 +160,22 @@ const Header = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
     padding: 16,
   },
-  wrapperInfo: {
+  headerContainer: {
     marginBottom: 16,
   },
-  title: {
-    fontSize: 24,
+  headerText: {
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 18,
-    marginBottom: 8,
-  },
-  row: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  formGroup: {
-    flex: 1,
-    marginRight: 8,
-  },
-  label: {
-    marginBottom: 4,
-  },
-  mapContainer: {
-    flex: 1,
-  },
-  cardsContainer: {
+  picker: {
+    backgroundColor: '#f2f2f2',
+    borderWidth: 1,
+    borderColor: 'black',
+    borderRadius: 4,
     marginBottom: 16,
   },
 });
