@@ -2,6 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Linking } from 'react-native';
 
 const Card = ({ name, adresse, description, site, image, onSelect, onMapLink }) => {
+  const handleMapLink = () => {
+    onMapLink(adresse);
+  };
+
   return (
     <TouchableOpacity style={styles.card} onPress={onSelect}>
       <Image source={{ uri: image }} style={styles.image} />
@@ -9,8 +13,8 @@ const Card = ({ name, adresse, description, site, image, onSelect, onMapLink }) 
         <Text style={styles.name}>{name}</Text>
         <Text style={styles.description}>{description}</Text>
         <Text style={styles.adresse}>Adresse: {adresse}</Text>
-        <TouchableOpacity style={styles.link} onPress={onMapLink}>
-          <Text style={styles.linkText}>Voir sur la carte</Text>
+        <TouchableOpacity style={styles.link} onPress={handleMapLink}>
+          <Text style={styles.linkText}>Voir dans Map</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>

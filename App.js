@@ -8,6 +8,7 @@ import close from './assets/close.png';
 import AboutUs from './AboutUs'; // Import the AboutUs component
 import Search  from './Search';
 import Footer from './Footer';
+import Contact from './Contact';
 export default function App() {
   const [currentTab, setCurrentTab] = React.useState("Home");
   const [showMenu, setShowMenu] = React.useState(false);
@@ -30,6 +31,13 @@ export default function App() {
           <Footer />
         </React.Fragment>
       );
+    }else if (currentTab === "Contact") {
+      return (
+        <React.Fragment>
+          <Contact />
+          <Footer />
+        </React.Fragment>
+      );
     }  else {
       return null;
     }
@@ -43,7 +51,8 @@ export default function App() {
         <View style={{ flexGrow: 1, marginTop: 50 }}>
           {TabButton(currentTab, setCurrentTab, "Home", home)}
           {TabButton(currentTab, setCurrentTab, "Search", search)}
-          
+          {TabButton(currentTab, setCurrentTab, "Contact", menu)}
+
         </View>
       </View>
 

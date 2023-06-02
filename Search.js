@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Linking } from 'react-native';
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
 import Card from './Card';
@@ -13,7 +13,13 @@ const Header = () => {
   const [zoneId, setZoneId] = useState('');
   const [specialityId, setSpecialityId] = useState('');
   const [restaurants, setRestaurants] = useState([]);
-  const [selectedRestaurant, setSelectedRestaurant] = useState(null); // Nouvel état pour stocker les informations du restaurant sélectionné
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  const [selectedRestaurantCoords, setSelectedRestaurantCoords] = useState(null);
+  const [cityCord, setCityCord] = useState(null);
+
+  const handleMapLink = (adresse) => {
+    Linking.openURL(`https://www.google.com/maps/place/${encodeURIComponent(adresse)}`);
+  };
 
   const getZonesByCity = async (cityId) => {
     try {
@@ -70,7 +76,7 @@ const Header = () => {
       const filteredRestaurants = response.data.filter((restaurant) => {
         return (
           restaurant.zone === zoneId &&
-          restaurant.speciality === specialityId
+          restaurant.specialite === specialityId
         );
       });
       setRestaurants(filteredRestaurants);
@@ -87,6 +93,7 @@ const Header = () => {
 
   const handleRestaurantSelect = (restaurant) => {
     setSelectedRestaurant(restaurant);
+    setSelectedRestaurantCoords(restaurant.cord);
   };
 
   return (
@@ -126,31 +133,39 @@ const Header = () => {
           ))}
         </Picker>
       </View>
-      {zoneId && specialityId && restaurants.length > 0 ? (
-        <ScrollView>
-          <View>
-            {restaurants.map((restaurant) => (
-              <Card
-                key={restaurant._id}
-                name={restaurant.name}
-                adresse={restaurant.adresse}
-                image={restaurant.image} // Assurez-vous que les données de l'API contiennent bien la propriété "image"
-                site={restaurant.site}
-                onSelect={() => handleRestaurantSelect(restaurant)} // Ajouter la gestion de la sélection du restaurant
-              />
-            ))}
-          </View>
-        </ScrollView>
-      ) : null}
+     {zoneId && specialityId && cityId ? (
+  restaurants.length > 0 ? (
+    <ScrollView>
+      <View>
+        {restaurants.map((restaurant) => (
+          <Card
+            key={restaurant._id}
+            name={restaurant.name}
+            adresse={restaurant.adresse}
+            image={restaurant.image}
+            site={restaurant.site}
+            onSelect={() => handleRestaurantSelect(restaurant)}
+            onMapLink={() => handleMapLink(restaurant.adresse)}
+          />
+        ))}
+      </View>
+    </ScrollView>
+  ) : (
+    <View style={styles.noRestaurantsContainer}>
+      <Text style={styles.noRestaurantsText}>Aucun restaurant n'est disponible pour la zone, la spécialité et la ville sélectionnées.</Text>
+    </View>
+  )
+) : null}
+
 
       {selectedRestaurant ? (
         <Map
-          restoCord={selectedRestaurant.cord}
+          restoCord={selectedRestaurantCoords}
           restoAddress={selectedRestaurant.adresse}
           restoName={selectedRestaurant.name}
           restoImg={selectedRestaurant.image}
           restoSite={selectedRestaurant.site}
-          cityCord={cityCord} // Assurez-vous de fournir les coordonnées de la ville à partir de votre logique
+          cityCord={cityCord}
         />
       ) : null}
     </View>
@@ -177,6 +192,17 @@ const styles = StyleSheet.create({
     borderColor: 'black',
     borderRadius: 4,
     marginBottom: 16,
+  },
+  noRestaurantsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    backgroundColor:'red'
+  },
+  noRestaurantsText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'gray',
   },
 });
 
